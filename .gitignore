@@ -1,0 +1,8 @@
+# Python
+venv/
+cache/
+.pytype
+__pycache__
+
+# LOG
+*.log
