@@ -22,8 +22,8 @@ def create_log_file(path: str) -> None:
 
 
 class Logger:
-    def __init__(self, logger_name: str, console_level=logging.INFO,
-                 file_level=logging.DEBUG, create_file=False) -> None:
+    def __init__(self, logger_name: str, console_level: int = logging.INFO,
+                 file_level: int = logging.DEBUG, create_file: bool = False) -> None:
         """
         A new simple wrapper class around python logging.
 
