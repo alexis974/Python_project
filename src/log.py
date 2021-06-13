@@ -49,7 +49,7 @@ class Logger:
         # create log directory
         create_directory(log_dir_name)
 
-        if create_file:
+        if create_file or len(os.listdir(log_dir_name)) == 0:
             create_log_file(log_dir_name)
 
         # create console handler and set level to INFO
