@@ -3,18 +3,18 @@
 
 """main.py: Main program for the project."""
 
-from log import Logger
+from log import close_logger, logger
 
 
 def main():
     """Main function of the project."""
-    log = Logger("Main", create_file=True)
+    log = logger("Main", create_file=True)
     log.info("Program starting...")
 
     # TODO
 
     log.info("Program ending...")
-    log.close_all()
+    close_logger()
 
 
 if __name__ == "__main__":

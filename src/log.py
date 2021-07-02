@@ -21,78 +21,84 @@ def create_log_file(path: str) -> None:
     file.close()
 
 
-class Logger:
-    def __init__(self, logger_name: str, console_level: int = logging.INFO,
-                 file_level: int = logging.DEBUG, create_file: bool = False) -> None:
-        """
-        A new simple wrapper class around python logging.
+class ConsoleFormatter(logging.Formatter):
+    """Logging Formatter with colors."""
 
-        The logger have a console handler that have a default log level of INFO.
-        The logger have a file handler that have a default log level of DEBUG.
+    grey = "\x1b[38;21m"
+    green = "\x1b[32;21m"
+    yellow = "\x1b[33;21m"
+    red = "\x1b[31;21m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
 
-        Note that this wrapper is made for small to medium project. For bigger
-        project, we advise you to take the time to make your logger fit your project.
-        """
-        self.name = logger_name
+    my_format = ("[%(asctime)s.%(msecs)03d] %(name)s - %(levelname)s"
+                 + "- %(message)s (%(filename)s:%(lineno)d)")
 
-        # We check if a logger with logger_name does not already exist
-        logger_list = [name for name in logging.root.manager.loggerDict]
-        if self.name in logger_list:
-            self.logger = logging.getLogger(logger_name)  # XXX
-            return
+    FORMATS = {logging.DEBUG: grey + my_format + reset,
+               logging.INFO: green + my_format + reset,
+               logging.WARNING: yellow + my_format + reset,
+               logging.ERROR: red + my_format + reset,
+               logging.CRITICAL: bold_red + my_format + reset}
 
-        self.logger = logging.getLogger(logger_name)
-        self.logger.setLevel(logging.DEBUG)
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(fmt=log_fmt, datefmt='%H:%M:%S')
+        return formatter.format(record)
 
-        log_dir_name = "log/"
 
-        # create log directory
-        create_directory(log_dir_name)
+def logger(logger_name: str, console_level: int = logging.INFO,
+           file_level: int = logging.DEBUG, create_file: bool = False) -> logging.Logger:
+    """
+    A new simple logger config for python logging.
 
-        if create_file or len(os.listdir(log_dir_name)) == 0:
-            create_log_file(log_dir_name)
+    The logger have a console handler that have a default log level of INFO.
+    The logger have a file handler that have a default log level of DEBUG.
 
-        # create console handler and set level to INFO
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(console_level)
+    Note that this config is made for small to medium project. For bigger
+    project, we advise you to take the time to make your logger fit your project.
+    """
+    # Check if a logger with logger_name does not already exist
+    logger_list = [name for name in logging.root.manager.loggerDict]
+    if logger_name in logger_list:
+        return logging.getLogger(logger_name)  # XXX
 
-        # create file handler and set level to debug
-        file_list = os.listdir(log_dir_name)
-        file_list.sort()
-        file_path = log_dir_name + file_list[-1]
-        file_handler = logging.FileHandler(filename=file_path, mode='a', encoding='utf-8')
-        file_handler.setLevel(file_level)
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.DEBUG)
 
-        # create formatter
-        formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-                                      datefmt='%m/%d/%Y %I:%M:%S %p')
+    log_dir_name = "log/"
 
-        # add formatter to console_handler
-        console_handler.setFormatter(formatter)
-        file_handler.setFormatter(formatter)
+    # create log directory
+    create_directory(log_dir_name)
 
-        # add console_handler to logger
-        self.logger.addHandler(console_handler)
-        self.logger.addHandler(file_handler)
+    if create_file or len(os.listdir(log_dir_name)) == 0:
+        create_log_file(log_dir_name)
 
-    def debug(self, msg: str = "", *args, **kwargs) -> None:
-        self.logger.debug(msg, *args, **kwargs)
+    # create console handler and set level to INFO
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(console_level)
 
-    def info(self, msg: str = "", *args, **kwargs) -> None:
-        self.logger.info(msg, *args, **kwargs)
+    # create file handler and set level to debug
+    file_list = os.listdir(log_dir_name)
+    file_list.sort()
+    file_path = log_dir_name + file_list[-1]
+    file_handler = logging.FileHandler(filename=file_path, mode='a', encoding='utf-8')
+    file_handler.setLevel(file_level)
 
-    def warning(self, msg: str = "", *args, **kwargs) -> None:
-        self.logger.warning(msg, *args, **kwargs)
+    # create file formatter
+    file_format = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+    file_formatter = logging.Formatter(fmt=file_format, datefmt='%m/%d/%Y %I:%M:%S %p')
 
-    def error(self, msg: str = "", *args, **kwargs) -> None:
-        self.logger.error(msg, *args, **kwargs)
+    # add formatter to console_handler
+    console_handler.setFormatter(ConsoleFormatter())
+    file_handler.setFormatter(file_formatter)
 
-    def critical(self, msg: str = "", *args, **kwargs) -> None:
-        self.logger.critical(msg, *args, **kwargs)
+    # add console_handler to logger
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
 
-    def exception(self, msg: str = "", *args, **kwargs) -> None:
-        self.logger.exception(msg, *args, **kwargs)
+    return logger
 
-    def close_all(self) -> None:
-        """Be aware that this will close all of the logger. Not juste this one."""
-        logging.shutdown()
+
+def close_logger() -> None:
+    """Be aware that this will close all of the logger. Not juste this one."""
+    logging.shutdown()
